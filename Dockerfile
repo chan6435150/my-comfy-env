@@ -25,10 +25,10 @@ RUN git clone https://github.com/ttulttul/ComfyUI-Iterative-Mixer.git || true
 RUN git clone https://github.com/yolain/ComfyUI-Easy-Use.git || true
 RUN git clone https://github.com/logerfo/ComfyUI-Color-Match.git || true
 
-# 6. 자동 실행 설정: 주피터랩과 코미풀을 동시에 켭니다.
+# 6. 자동 실행 설정: 주피터랩 시작 위치를 넒은 거실(/workspace)로 강제 고정
 RUN printf '#!/bin/bash\n\
 # 주피터랩 백그라운드 실행\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token="" --NotebookApp.password="" &\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --NotebookApp.token="" --NotebookApp.password="" &\n\
 \n\
 # 코미풀 실행\n\
 cd /workspace/ComfyUI\n\
