@@ -15,9 +15,10 @@ RUN git clone https://github.com/ttulttul/ComfyUI-Iterative-Mixer.git || true
 RUN git clone https://github.com/yolain/ComfyUI-Easy-Use.git || true
 RUN git clone https://github.com/logerfo/ComfyUI-Color-Match.git || true
 
-# 4. 필수 라이브러리 설치: 윽심님이 고생했던 Triton, SageAttention 등을 미리 박아버립니다.
-RUN cd ComfyUI && \
-    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 && \
+# 4. 필수 라이브러리 설치: 윽심님이 고생했던 Triton, SageAttention 등
+WORKDIR /workspace/ComfyUI
+
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir triton sageattention nunchaku
 
