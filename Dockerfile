@@ -4,10 +4,13 @@ FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 # 2. 필수 도구들 설치: 컴퓨터가 기본적으로 갖춰야 할 연장들을 챙깁니다.
 RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 && rm -rf /var/lib/apt/lists/*
 
-# 3. 코미풀 및 윽심님 전용 커스텀 노드 설치
+# 3. 코미풀 설치 및 노드 폴더로 이동
 WORKDIR /workspace/ComfyUI/custom_nodes
 
-# 필수 노드들 한 번에 가져오기
+# 기존에 혹시 폴더가 있다면 지우고 새로 받도록 설정 (안전장치)
+RUN rm -rf ComfyUI-Manager ComfyUI-VideoHelperSuite ComfyUI-Frame-Interpolation steerable-motion ComfyUI-Iterative-Mixer ComfyUI-Easy-Use ComfyUI-Color-Match
+
+# 필수 노드들 설치
 RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git && \
     git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
     git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && \
