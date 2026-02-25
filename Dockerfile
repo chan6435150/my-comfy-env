@@ -4,11 +4,16 @@ FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 # 2. 필수 도구들 설치: 컴퓨터가 기본적으로 갖춰야 할 연장들을 챙깁니다.
 RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 && rm -rf /var/lib/apt/lists/*
 
-# 3. 코미풀(ComfyUI) 및 매니저 설치
-WORKDIR /workspace
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git && \
-    cd ComfyUI/custom_nodes && \
-    git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+# 3. 코미풀 및 필수 커스텀 노드 미리 설치
+WORKDIR /workspace/ComfyUI/custom_nodes
+
+# 매니저 설치
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+
+# 윽심님이 쓰시는 필수 노드들 미리 복제
+RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
+    git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && \
+    git clone https://github.com/banodoco/steerable-motion.git
 
 # 4. 필수 라이브러리 설치: 윽심님이 고생했던 Triton, SageAttention 등을 미리 박아버립니다.
 RUN cd ComfyUI && \
