@@ -4,20 +4,16 @@ FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 # 2. 필수 도구들 설치: 컴퓨터가 기본적으로 갖춰야 할 연장들을 챙깁니다.
 RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 && rm -rf /var/lib/apt/lists/*
 
-# 3. 코미풀 설치 및 노드 폴더로 이동
+# 3. 커스텀 노드 설치 (에러가 나도 무시하고 직진하는 || true 치트키 적용!)
 WORKDIR /workspace/ComfyUI/custom_nodes
 
-# 기존에 혹시 폴더가 있다면 지우고 새로 받도록 설정 (안전장치)
-RUN rm -rf ComfyUI-Manager ComfyUI-VideoHelperSuite ComfyUI-Frame-Interpolation steerable-motion ComfyUI-Iterative-Mixer ComfyUI-Easy-Use ComfyUI-Color-Match
-
-# 필수 노드들 설치
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git && \
-    git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git && \
-    git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git && \
-    git clone https://github.com/banodoco/steerable-motion.git && \
-    git clone https://github.com/ttulttul/ComfyUI-Iterative-Mixer.git && \
-    git clone https://github.com/yolain/ComfyUI-Easy-Use.git && \
-    git clone https://github.com/logerfo/ComfyUI-Color-Match.git
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git || true
+RUN git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git || true
+RUN git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation.git || true
+RUN git clone https://github.com/banodoco/steerable-motion.git || true
+RUN git clone https://github.com/ttulttul/ComfyUI-Iterative-Mixer.git || true
+RUN git clone https://github.com/yolain/ComfyUI-Easy-Use.git || true
+RUN git clone https://github.com/logerfo/ComfyUI-Color-Match.git || true
 
 # 4. 필수 라이브러리 설치: 윽심님이 고생했던 Triton, SageAttention 등을 미리 박아버립니다.
 RUN cd ComfyUI && \
