@@ -15,12 +15,20 @@ RUN git clone https://github.com/ttulttul/ComfyUI-Iterative-Mixer.git || true
 RUN git clone https://github.com/yolain/ComfyUI-Easy-Use.git || true
 RUN git clone https://github.com/logerfo/ComfyUI-Color-Match.git || true
 
-# 4. 필수 라이브러리 설치: 윽심님이 고생했던 Triton, SageAttention 등
+# 4. 필수 라이브러리 설치: 범인 색출을 위해 명령어를 분리합니다.
 WORKDIR /workspace/ComfyUI
 
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir triton sageattention nunchaku
+# 0) 패키지 설치 도구 최신화 및 컴파일(조립) 필수 도구 미리 깔기
+RUN pip install --no-cache-dir --upgrade pip ninja wheel
+
+# 1) 파이토치 환경 설치
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# 2) 코미풀 기본 요구사항 설치
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3) 필수 추가 라이브러리 (보통 여기서 에러가 많이 납니다)
+RUN pip install --no-cache-dir triton sageattention nunchaku
 
 # 5. 자동 실행 설정: printf를 써서 줄바꿈을 확실하게 만듭니다.
 RUN printf '#!/bin/bash\ncd /workspace/ComfyUI\npython main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
