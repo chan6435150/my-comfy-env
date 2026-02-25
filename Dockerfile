@@ -14,8 +14,9 @@ RUN cd ComfyUI && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir triton sageattention nunchaku
 
-# 5. 자동 실행 설정: 팟이 켜지자마자 코미풀이 실행되게 합니다.
-RUN echo '#!/bin/bash\ncd /workspace/ComfyUI\npython main.py --listen 0.0.0.0 --port 8188' > /start.sh && \
+# 5. 자동 실행 설정: printf를 써서 줄바꿈을 확실하게 만듭니다.
+RUN printf '#!/bin/bash\ncd /workspace/ComfyUI\npython main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
     chmod +x /start.sh
 
-CMD ["/start.sh"]
+# 컨테이너가 켜질 때 이 스크립트를 실행합니다.
+CMD ["/bin/bash", "/start.sh"]
