@@ -43,9 +43,6 @@ RUN pip install --no-cache-dir \
     natsort \
     reportlab
 
-# [핵심] SageAttention은 파이토치를 인식해야 하므로 격리 해제(--no-build-isolation) 옵션을 반드시 추가!
-RUN pip install --no-cache-dir --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
-
 # 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
