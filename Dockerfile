@@ -15,9 +15,12 @@ RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton 
 
+
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
 # 깃허브 로봇(CPU)이 C++ 컴파일할 때 RTX 4090용으로 조립하도록 강제 지정
 ENV TORCH_CUDA_ARCH_LIST="8.9"
+
+
 
 RUN pip install --no-cache-dir \
     GitPython \
