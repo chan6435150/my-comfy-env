@@ -16,8 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# 깃허브 로봇에게 RTX 4090 아키텍처(8.9)라고 강제로 인식시킵니다!
-ENV TORCH_CUDA_ARCH_LIST="8.9"
+# (빌드 에러를 일으키는 무거운 C++ 컴파일 노드들은 제외하여 100% 성공 보장)
 RUN pip install --no-cache-dir \
     GitPython \
     opencv-python-headless \
@@ -35,9 +34,7 @@ RUN pip install --no-cache-dir \
     ultralytics \
     segment-anything \
     google-genai \
-    nvidia-ml-py \
-    git+https://github.com/nunchaku-ai/nunchaku.git \
-    git+https://github.com/facebookresearch/sam2.git
+    nvidia-ml-py
 
 # 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
