@@ -13,10 +13,14 @@ WORKDIR /workspace/ComfyUI
 RUN pip install --no-cache-dir --upgrade pip ninja wheel uv
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir triton sageattention
+# (수정) 구버전 sageattention 삭제, triton만 유지
+RUN pip install --no-cache-dir triton 
 
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# (무한 재부팅 원인 natsort 및 reportlab 추가)
+# 깃허브 로봇(CPU)이 C++ 컴파일할 때 RTX 4090용으로 조립하도록 강제 지정! (필수)
+ENV TORCH_CUDA_ARCH_LIST="8.9"
+
+# 무한 재부팅 원인(natsort) 및 최신 SageAttention(깃허브 직통) 추가
 RUN pip install --no-cache-dir \
     GitPython \
     opencv-python-headless \
@@ -36,27 +40,13 @@ RUN pip install --no-cache-dir \
     google-genai \
     nvidia-ml-py \
     natsort \
-    reportlab
-    
+    reportlab \
+    git+https://github.com/thu-ml/SageAttention.git
+
 # 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
 # 6. 자동 실행 설정 (네트워크 볼륨 덮어쓰기 방어 로직 추가)
 RUN printf '#!/bin/bash\n\
 # 주피터랩 백그라운드 실행\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --NotebookApp.token="" --NotebookApp.password="" &\n\
-\n\
-# 매니저 생존 확인 및 자동 복구 (런팟 볼륨 마운트 대비)\n\
-mkdir -p /workspace/ComfyUI/custom_nodes\n\
-if [ ! -d "/workspace/ComfyUI/custom_nodes/ComfyUI-Manager" ]; then\n\
-    echo "ComfyUI-Manager not found! Cloning now..."\n\
-    cd /workspace/ComfyUI/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager.git\n\
-fi\n\
-\n\
-# 코미풀 실행\n\
-cd /workspace/ComfyUI\n\
-python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
-    chmod +x /start.sh
-
-# 7. 컨테이너 시작 명령
-CMD ["/bin/bash", "/start.sh"]
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no
