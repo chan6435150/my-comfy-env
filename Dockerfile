@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir triton sageattention
 # 5. 커스텀 노드 에러 방지용 백신 & 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir --force-reinstall GitPython && \
     pip install --no-cache-dir opencv-python-headless numba deepdiff gguf piexif fal-client dynamicprompts nunchaku && \
-    pip install --no-cache-dir toml cpuinfo onnxruntime ultralytics segment-anything google-genai && \
+    pip install --no-cache-dir toml py-cpuinfo onnxruntime-gpu ultralytics segment-anything google-genai && \
     pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
 # 6. 자동 실행 설정 (CORS 보안이 해제된 주피터 터미널 + 코미풀)
