@@ -8,34 +8,40 @@ RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 f
 WORKDIR /workspace
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git
 
-# 4. 파이썬 라이브러리 설치 (기본)
+# 4. 파이썬 기본 라이브러리 및 최강 속도 툴(uv) 설치
 WORKDIR /workspace/ComfyUI
-RUN pip install --no-cache-dir --upgrade pip ninja wheel
+RUN pip install --no-cache-dir --upgrade pip ninja wheel uv
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
-# 매니저 파업 방지용 uv 및 잦은 에러 부품 사전 설치
-RUN pip install --no-cache-dir uv GitPython opencv-python-headless dill runwayml piexif dynamicprompts
+# 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
+# (중복 제거 + Nunchaku 최신화 + SAM2 + Crystools 에러까지 100% 차단)
+RUN pip install --no-cache-dir \
+    GitPython \
+    opencv-python-headless \
+    dill \
+    runwayml \
+    piexif \
+    dynamicprompts \
+    numba \
+    deepdiff \
+    gguf \
+    fal-client \
+    toml \
+    py-cpuinfo \
+    onnxruntime-gpu \
+    ultralytics \
+    segment-anything \
+    google-genai \
+    nvidia-ml-py \
+    "nunchaku>=1.0.0" \
+    git+https://github.com/facebookresearch/sam2.git
 
-# 5. 커스텀 노드 에러 방지용 백신 & 주피터 터미널 엔진 영구 설치
-RUN pip install --no-cache-dir --force-reinstall GitPython && \
-    pip install --no-cache-dir opencv-python-headless numba deepdiff gguf piexif fal-client dynamicprompts nunchaku && \
-    pip install --no-cache-dir toml py-cpuinfo onnxruntime-gpu ultralytics segment-anything google-genai && \
-    pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
+# 주피터 터미널 엔진 영구 설치
+RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
-# 6. 자동 실행 설정 (CORS 보안이 해제된 주피터 터미널 + 코미풀)
+# 6. 자동 실행 설정 (네트워크 볼륨 덮어쓰기 방어 로직 추가)
 RUN printf '#!/bin/bash\n\
-# 주피터랩 백그라운드 실행 (보안 예외 처리 추가)\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --NotebookApp.token="" --NotebookApp.password="" &\n\
-\n\
-# 코미풀 실행\n\
-cd /workspace/ComfyUI\n\
-python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
-    chmod +x /start.sh
-
-# 7. 컨테이너 시작 명령
-CMD ["/bin/bash", "/start.sh"]
-
-# 7. 컨테이너 시작 명령
-CMD ["/bin/bash", "/start.sh"]
+# 주피터랩 백그라운드 실행\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin
