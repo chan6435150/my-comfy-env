@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# (빌드 에러를 일으키는 무거운 C++ 컴파일 노드들은 제외하여 100% 성공 보장)
+# (무한 재부팅 원인 natsort 및 reportlab 추가)
 RUN pip install --no-cache-dir \
     GitPython \
     opencv-python-headless \
@@ -34,8 +34,10 @@ RUN pip install --no-cache-dir \
     ultralytics \
     segment-anything \
     google-genai \
-    nvidia-ml-py
-
+    nvidia-ml-py \
+    natsort \
+    reportlab
+    
 # 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
