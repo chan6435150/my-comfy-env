@@ -1,61 +1,41 @@
-# 1. 베이스 이미지: NVIDIA 최신 그래픽카드 환경
+# 1. 베이스 이미지
 FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 
-# 2. 필수 도구 및 영상 처리(ffmpeg) 한 번에 설치 (최적화)
+# 2. 필수 도구 설치
 RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# 3. 코미풀(ComfyUI) 본체 먼저 설치
+# 3. 코미풀 본체 설치
 WORKDIR /workspace
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git
 
-# 4. 파이썬 기본 라이브러리 및 최강 속도 툴(uv) 설치
+# 4. 기본 라이브러리 및 uv 설치
 WORKDIR /workspace/ComfyUI
 RUN pip install --no-cache-dir --upgrade pip ninja wheel uv
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir triton 
+RUN pip install --no-cache-dir triton
 
-
-# 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# 깃허브 로봇(CPU)이 C++ 컴파일할 때 RTX 4090용으로 조립하도록 강제 지정
-ENV TORCH_CUDA_ARCH_LIST="8.9"
-
-
-
+# 5. 가벼운 백신 패키지만 빌드 시 설치 (natsort 등 포함)
 RUN pip install --no-cache-dir \
-    GitPython \
-    opencv-python-headless \
-    dill \
-    runwayml \
-    piexif \
-    dynamicprompts \
-    numba \
-    deepdiff \
-    gguf \
-    fal-client \
-    toml \
-    py-cpuinfo \
-    onnxruntime-gpu \
-    ultralytics \
-    segment-anything \
-    google-genai \
-    nvidia-ml-py \
-    natsort \
-    reportlab
+    GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
+    numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
+    ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab jupyter-server-terminals terminado
 
-# 주피터 터미널 엔진 영구 설치
-RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
-
-# 6. 자동 실행 설정 (네트워크 볼륨 덮어쓰기 방어 로직 추가)
+# 6. [핵심] 시작 스크립트: SageAttention 자동 검사 및 복구 로직
 RUN printf '#!/bin/bash\n\
-# 주피터랩 백그라운드 실행\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --NotebookApp.token="" --NotebookApp.password="" &\n\
+# 주피터랩 실행\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True &\n\
 \n\
-# 매니저 생존 확인 및 자동 복구 (런팟 볼륨 마운트 대비)\n\
+# 매니저 복구 로직\n\
 mkdir -p /workspace/ComfyUI/custom_nodes\n\
 if [ ! -d "/workspace/ComfyUI/custom_nodes/ComfyUI-Manager" ]; then\n\
-    echo "ComfyUI-Manager not found! Cloning now..."\n\
     cd /workspace/ComfyUI/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager.git\n\
+fi\n\
+\n\
+# [네트워크 볼륨 최적화] SageAttention 설치 여부 확인\n\
+if ! python -c "import sageattention" &> /dev/null; then\n\
+    echo "SageAttention not found. Installing to network volume..."\n\
+    pip install git+https://github.com/thu-ml/SageAttention.git\n\
 fi\n\
 \n\
 # 코미풀 실행\n\
@@ -63,5 +43,4 @@ cd /workspace/ComfyUI\n\
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
     chmod +x /start.sh
 
-# 7. 컨테이너 시작 명령
 CMD ["/bin/bash", "/start.sh"]
