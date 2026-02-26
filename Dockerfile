@@ -16,7 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# (가짜 눈차쿠 대신 깃허브 본진 주소로 직통 설치)
+# 깃허브 로봇에게 RTX 4090 아키텍처(8.9)라고 강제로 인식시킵니다!
+ENV TORCH_CUDA_ARCH_LIST="8.9"
 RUN pip install --no-cache-dir \
     GitPython \
     opencv-python-headless \
