@@ -18,12 +18,13 @@ RUN pip install --no-cache-dir triton sageattention
 # 5. 커스텀 노드 에러 방지용 백신 & 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir --force-reinstall GitPython && \
     pip install --no-cache-dir opencv-python-headless numba deepdiff gguf piexif fal-client dynamicprompts nunchaku && \
+    pip install --no-cache-dir toml cpuinfo onnxruntime ultralytics segment-anything google-genai && \
     pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bash_kernel
 
-# 6. 자동 실행 설정 (위험한 find 명령어 제거, 주피터 터미널만 활성화)
+# 6. 자동 실행 설정 (CORS 보안이 해제된 주피터 터미널 + 코미풀)
 RUN printf '#!/bin/bash\n\
-# 주피터랩 백그라운드 실행 (터미널 기능 켜기)\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --NotebookApp.token="" --NotebookApp.password="" &\n\
+# 주피터랩 백그라운드 실행 (보안 예외 처리 추가)\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --NotebookApp.token="" --NotebookApp.password="" &\n\
 \n\
 # 코미풀 실행\n\
 cd /workspace/ComfyUI\n\
