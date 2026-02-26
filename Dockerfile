@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
+# 매니저 파업 방지용 uv 및 잦은 에러 부품 사전 설치
+RUN pip install --no-cache-dir uv GitPython opencv-python-headless dill runwayml piexif dynamicprompts
+
 # 5. 커스텀 노드 에러 방지용 백신 & 주피터 터미널 엔진 영구 설치
 RUN pip install --no-cache-dir --force-reinstall GitPython && \
     pip install --no-cache-dir opencv-python-headless numba deepdiff gguf piexif fal-client dynamicprompts nunchaku && \
