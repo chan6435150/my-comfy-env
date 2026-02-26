@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir triton sageattention
 
 # 5. 커스텀 노드 에러 방지용 '슈퍼 백신' 통합 설치
-# (중복 제거 + Nunchaku 최신화 + SAM2 + Crystools 에러까지 100% 차단)
+# (가짜 눈차쿠 대신 깃허브 본진 주소로 직통 설치)
 RUN pip install --no-cache-dir \
     GitPython \
     opencv-python-headless \
@@ -35,7 +35,7 @@ RUN pip install --no-cache-dir \
     segment-anything \
     google-genai \
     nvidia-ml-py \
-    "nunchaku>=1.0.0" \
+    git+https://github.com/nunchaku-ai/nunchaku.git \
     git+https://github.com/facebookresearch/sam2.git
 
 # 주피터 터미널 엔진 영구 설치
@@ -44,4 +44,19 @@ RUN pip install --no-cache-dir jupyter-server-terminals terminado ptyprocess bas
 # 6. 자동 실행 설정 (네트워크 볼륨 덮어쓰기 방어 로직 추가)
 RUN printf '#!/bin/bash\n\
 # 주피터랩 백그라운드 실행\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --NotebookApp.token="" --NotebookApp.password="" &\n\
+\n\
+# 매니저 생존 확인 및 자동 복구 (런팟 볼륨 마운트 대비)\n\
+mkdir -p /workspace/ComfyUI/custom_nodes\n\
+if [ ! -d "/workspace/ComfyUI/custom_nodes/ComfyUI-Manager" ]; then\n\
+    echo "ComfyUI-Manager not found! Cloning now..."\n\
+    cd /workspace/ComfyUI/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager.git\n\
+fi\n\
+\n\
+# 코미풀 실행\n\
+cd /workspace/ComfyUI\n\
+python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto\n' > /start.sh && \
+    chmod +x /start.sh
+
+# 7. 컨테이너 시작 명령
+CMD ["/bin/bash", "/start.sh"]
