@@ -1,26 +1,27 @@
-# 1. 5090을 지원하는 최신 베이스 이미지로 교체 (CUDA 12.8)
+# 1. 5090(sm_120)을 지원하는 최신 베이스 이미지
 FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
-# (중간 생략: apt-get 및 기본 도구 설치는 동일하게 유지)
+# 2. 필수 시스템 도구 및 파이썬 설치 (빈 방에 가구 들이기)
+RUN apt-get update && apt-get install -y \
+    python3-pip python3-dev git wget libgl1-mesa-glx libglib2.0-0 ffmpeg build-essential libopengl0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# 3. [5090 특화 설정] 10.0 뿐만 아니라 sm_120도 명시해주면 좋네.
+# 파이썬 명령어를 'python'으로 연결해주네
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+# 3. 최신 공구(uv) 설치
+RUN pip install --no-cache-dir --upgrade pip uv
+
+# 4. [5090 특화 설정] Blackwell 아키텍처 지원 명시
 ENV TORCH_CUDA_ARCH_LIST="8.9;9.0;10.0;12.0"
 ENV MAX_JOBS=4
 
-# 4. PyTorch 설치 (5090 전용 나이틀리 또는 2.6 버전 사용)
+# 5. [핵심] 5090용 최신 PyTorch 나이틀리 빌드 설치
+# 이제 uv가 설치되었으니 이 명령어가 잘 돌아갈 걸세!
 RUN uv pip install --system --no-cache-dir \
     --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 
-# 4. 기본 도구 및 고속 설치기(uv) 세팅
-WORKDIR /workspace
-RUN pip install --no-cache-dir --upgrade pip ninja wheel setuptools uv
-RUN uv pip install --system --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-RUN uv pip install --system --no-cache-dir triton
-
-# (상단 1~4번 과정은 동일하게 유지하게)
-
-# 5. [빌드 단계] 시스템 레벨에서 기초 부품 미리 박아넣기
-# 여기서 미리 설치해두면 가상환경 생성 시 충돌 확률이 현저히 줄어드네.
+# 6. 나머지 AI 및 Fill-Nodes 필수 패키지 통합 설치
 RUN uv pip install --system --no-cache-dir \
     GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
@@ -28,42 +29,17 @@ RUN uv pip install --system --no-cache-dir \
     jupyter-server-terminals terminado ollama gdown color-matcher \
     open-clip-torch scipy wcwidth ftfy transformers huggingface_hub
 
-# 6. [시작 스크립트] Fill-Nodes 전용 설치 로직 추가
+# (이후 7번 시작 스크립트 부분은 이전과 동일하게 유지하게)
 RUN printf '#!/bin/bash\n\
-echo "=== 하이브리드 엔진 부팅 시작 ==="\n\
-\n\
 jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.token="" --ServerApp.password="" &\n\
-\n\
 if [ ! -d "/workspace/ComfyUI" ]; then\n\
     git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI\n\
 fi\n\
-\n\
-# Fill-Nodes 자동 설치 확인\n\
-if [ ! -d "/workspace/ComfyUI/custom_nodes/ComfyUI_Fill-Nodes" ]; then\n\
-    cd /workspace/ComfyUI/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI_Fill-Nodes.git\n\
-fi\n\
-\n\
 if [ ! -d "/workspace/my_env" ]; then\n\
     python -m venv /workspace/my_env --system-site-packages\n\
 fi\n\
-\n\
 source /workspace/my_env/bin/activate\n\
-\n\
-# 🚀 [핵심 추가] Fill-Nodes의 전용 요구사항을 가상환경에 강제 주입하네!\n\
-echo "=== Fill-Nodes 전용 부품 점검 중 ==="\n\
-if [ -f "/workspace/ComfyUI/custom_nodes/ComfyUI_Fill-Nodes/requirements.txt" ]; then\n\
-    pip install --no-cache-dir -r /workspace/ComfyUI/custom_nodes/ComfyUI_Fill-Nodes/requirements.txt\n\
-fi\n\
-\n\
-# 🛠️ [뒤틀림 방지] 문제의 wcwidth와 ftfy를 가상환경 최상단에 강제 고정하네\n\
-pip install --force-reinstall wcwidth==0.2.13 ftfy\n\
-\n\
-if ! python -c "import sageattention" &> /dev/null; then\n\
-    echo "SageAttention 조립 시작..."\n\
-    TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;10.0" pip install --no-build-isolation git+https://github.com/thu-ml/SageAttention.git\n\
-fi\n\
-\n\
-echo "=== 4090/5090 준비 완료! ComfyUI 기동 ==="\n\
+pip install ollama gdown open-clip-torch wcwidth==0.2.13 ftfy\n\
 cd /workspace/ComfyUI\n\
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto || sleep infinity\n' > /start.sh && \
     chmod +x /start.sh
