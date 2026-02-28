@@ -45,7 +45,7 @@ source /workspace/my_env/bin/activate\n\
 # [긴급 복구] 꼬여버린 수학 부품(mpmath, sympy) 자동 감지 및 강제 초기화\n\
 if ! python -c "import sympy; import mpmath" &> /dev/null; then\n\
     echo "Corrupted math packages detected! Force reinstalling..."\n\
-    pip install --upgrade --force-reinstall mpmath sympy\n\
+    pip install --ignore-installed mpmath sympy\n\
 fi\n\
 \n\
 # 필수 부품 체크\n\
