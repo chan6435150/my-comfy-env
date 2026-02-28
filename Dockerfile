@@ -18,8 +18,8 @@ RUN pip install --no-cache-dir \
 
 # 5. [핵심] 시작 스크립트: 에러 없는 완벽한 가상환경 부팅 로직
 RUN printf '#!/bin/bash\n\
-# 주피터랩 실행\n\
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True &\n\
+# 주피터랩 실행 (프록시 차단 해제 및 자동 로그인 적용)\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.token="" --ServerApp.password="" &\n\
 \n\
 # 코미풀 본체 확인 및 클론\n\
 if [ ! -d "/workspace/ComfyUI" ]; then\n\
