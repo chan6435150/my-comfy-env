@@ -18,12 +18,12 @@ RUN uv pip install --system --no-cache-dir triton ninja
 # 이 마법의 주문(TORCH_CUDA_ARCH_LIST)이 있으면 GPU가 없어도 조립이 가능하다네.
 RUN TORCH_CUDA_ARCH_LIST="8.9" MAX_JOBS=2 pip install --no-cache-dir --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
 
-# 5. 나머지 일반 패키지 광속 설치 (여기에 ollama를 추가했네!)
+# 5. 나머지 일반 패키지 광속 설치 (여기에 ollama와 gdown을 나란히 넣었네!)
 RUN uv pip install --system --no-cache-dir \
     GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
-    jupyterlab color-matcher sympy mpmath ollama
+    jupyterlab color-matcher sympy mpmath ollama gdown
 
 # 6. 마법의 시작 스크립트 (자네의 소중한 파일 보존)
 RUN printf '#!/bin/bash\n\
