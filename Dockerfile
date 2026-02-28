@@ -1,56 +1,49 @@
-# 1. 베이스 이미지
+# 1. 베이스 이미지 (최신 CUDA 환경)
 FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 
-# 2. 시스템 패키지 설치
+# 2. 시스템 필수 부품 및 컴파일 도구 설치 (SageAttention 빌드에 필수!)
 RUN apt-get update && apt-get install -y \
-    git wget libgl1-mesa-glx libglib2.0-0 ffmpeg \
+    git wget libgl1-mesa-glx libglib2.0-0 ffmpeg build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. uv 및 파이썬 패키지 초고속 설치 (전용 마트와 일반 마트 분리!)
+# 3. uv 설치 및 기본 패키지 세팅
 RUN pip install --no-cache-dir --upgrade pip uv
 
-# [전용 마트] PyTorch 부품들만 특별한 곳에서 사오기
+# [중요] 4. 빌드 단계에서 SageAttention 미리 설치 (이게 자동화의 핵심!)
+# RTX 4090 환경에 맞춰서 미리 컴파일해서 넣어버립니다.
 RUN uv pip install --system --no-cache-dir \
     torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    
+RUN uv pip install --system --no-cache-dir ninja wheel setuptools
+RUN MAX_JOBS=4 uv pip install --system --no-cache-dir git+https://github.com/thu-ml/SageAttention.git
 
-# [일반 마트] 나머지 모든 부품들은 일반 마트에서 사오기
+# 5. 나머지 일반 패키지 광속 설치
 RUN uv pip install --system --no-cache-dir \
     triton GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyterlab color-matcher sympy mpmath
 
-# 4. 마법의 시작 스크립트 (자네의 소중한 예전 집을 그대로 씁니다!)
+# 6. 마법의 시작 스크립트 (기존 파일 보존형)
 RUN printf '#!/bin/bash\n\
-echo "=== 내 소중한 파일들 복구 및 실행 ==="\n\
+echo "=== 시스템 가동 및 파일 확인 ==="\n\
 \n\
-# 주피터랩 실행 (이전과 동일)\n\
+# 주피터랩 배경 실행\n\
 jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.token="" --ServerApp.password="" &\n\
 \n\
-# 1. 예전 집(/workspace/ComfyUI)이 무사한지 확인! (자네 파일들이 여기 있지!)\n\
+# 원래 있던 ComfyUI 폴더 확인\n\
 if [ ! -d "/workspace/ComfyUI" ]; then\n\
-    echo "ComfyUI가 없어서 새로 설치합니다..."\n\
+    echo "새로 설치를 시작합니다..."\n\
     git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI\n\
     cd /workspace/ComfyUI/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager.git\n\
 fi\n\
 \n\
-# 2. 자네의 원래 집으로 이동!\n\
 cd /workspace/ComfyUI\n\
+# 필수 라이브러리 최종 점검 (이미 깔려있으면 1초만에 넘어감)\n\
 uv pip install --system --no-cache-dir -r requirements.txt\n\
 \n\
-# 3. 보스 몬스터(SageAttention) 안전하게 설치\n\
-echo "=== 특수 부품(SageAttention) 확인 중... ==="\n\
-if ! python -c "import sageattention" &> /dev/null; then\n\
-    pip install ninja wheel setuptools\n\
-    MAX_JOBS=1 pip install git+https://github.com/thu-ml/SageAttention.git\n\
-fi\n\
-\n\
-# 4. 대망의 실행!\n\
-echo "=== ComfyUI 기동 (커스텀 노드 전원 부활!) ==="\n\
+echo "=== 모든 준비 완료! ComfyUI를 시작합니다. ==="\n\
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto || sleep infinity\n' > /start.sh
 
-# 스크립트에 실행 권한 주기
 RUN chmod +x /start.sh
-
-# 컨테이너가 켜질 때 스크립트 실행
 CMD ["/bin/bash", "/start.sh"]
