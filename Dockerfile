@@ -38,8 +38,8 @@ if python3 -c "import torch; import torchaudio; exit(0 if torch.cuda.is_availabl
 else\n\
     echo "⚠️ 엔진이 뒤틀렸구만. 강제 정화 의식을 시작하지..." \n\
     python -m ensurepip --upgrade\n\
-    # 💡 RTX 5090(sm_120) 지원 및 서버 꼬임 방지를 위해 완벽히 맞춰진 cu126 개발 버전으로 세팅\n\
-    pip install --no-cache-dir --pre --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126\n\
+    # 💡 RTX 5090(sm_120) 완벽 인식을 위해 cu128 개발 버전으로 세팅 (핵심 수정 부분)\n\
+    pip install --no-cache-dir --pre --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128\n\
     pip install --no-cache-dir sqlalchemy aiohttp pillow ollama gdown open-clip-torch ftfy wcwidth==0.2.13\n\
 fi\n\
 \n\
