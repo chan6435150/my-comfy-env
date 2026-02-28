@@ -16,18 +16,18 @@ RUN pip install --no-cache-dir --upgrade pip uv
 ENV TORCH_CUDA_ARCH_LIST="8.9;9.0;10.0;12.0"
 ENV MAX_JOBS=4
 
-# 5. [핵심] 5090용 최신 PyTorch 나이틀리 빌드 설치
-# 이제 uv가 설치되었으니 이 명령어가 잘 돌아갈 걸세!
+# 5. [핵심] 5090용 최신 PyTorch 나이틀리 빌드 설치 (sm_120 대응)
 RUN uv pip install --system --no-cache-dir \
     --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 
-# 6. 나머지 AI 및 Fill-Nodes 필수 패키지 통합 설치
+# 6. [전수 조사] AI 노드 및 ComfyUI 0.14.1 필수 부품 (sqlalchemy 추가!)
 RUN uv pip install --system --no-cache-dir \
     GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyter-server-terminals terminado ollama gdown color-matcher \
-    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub
+    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub \
+    sqlalchemy aiohttp pillow
 
 # (이후 7번 시작 스크립트 부분은 이전과 동일하게 유지하게)
 RUN printf '#!/bin/bash\n\
