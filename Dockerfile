@@ -15,12 +15,13 @@ RUN pip install --no-cache-dir --upgrade pip ninja wheel setuptools uv
 RUN uv pip install --system --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 RUN uv pip install --system --no-cache-dir triton
 
-# 5. 빌드 시 미리 넣어둘 AI 패키지 (ollama, gdown, color-matcher 포함)
+# 5. 빌드 시 미리 넣어둘 AI 패키지 (ollama, gdown, color-matcher, open-clip-torch 추가)
 RUN uv pip install --system --no-cache-dir \
     GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
-    jupyter-server-terminals terminado ollama gdown color-matcher
+    jupyter-server-terminals terminado ollama gdown color-matcher \
+    open-clip-torch scipy
 
 # 6. 시작 스크립트 작성 (줄 끝의 역슬래시 \ 를 아주 조심해야 하네!)
 RUN printf '#!/bin/bash\n\
