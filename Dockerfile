@@ -28,40 +28,24 @@ RUN uv pip install --system --no-cache-dir \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyterlab color-matcher sympy mpmath
 
-# 6. 마법의 시작 스크립트를 도커 파일 안에서 직접 만들기! (여기로 다 합쳤다네!)
-RUN cat << 'EOF' > /start.sh
-#!/bin/bash
-echo "=== 런팟 볼륨 매핑 시작 ==="
-
-# 마법의 USB(영구 보관함) 폴더 만들기
-mkdir -p /workspace/ComfyUI_Models
-mkdir -p /workspace/ComfyUI_Output
-
-# 본체에 있는 폴더를 지우고 USB 폴더로 통로 연결하기
-rm -rf /app/ComfyUI/models
-ln -s /workspace/ComfyUI_Models /app/ComfyUI/models
-
-rm -rf /app/ComfyUI/output
-ln -s /workspace/ComfyUI_Output /app/ComfyUI/output
-
-# 주피터랩 실행
-jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace \
-    --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" \
-    --ServerApp.disable_check_xsrf=True --ServerApp.trust_xheaders=True \
-    --ServerApp.allow_remote_access=True --ServerApp.token="" --ServerApp.password="" &
-
-# 🚀 [핵심 작전] 보스 몬스터(SageAttention)를 컴퓨터가 켜지고 그래픽카드가 일할 때 조립한다!
-echo "=== 까다로운 특수 부품(SageAttention) 조립 중... (시간이 조금 걸릴 수 있음) ==="
-if ! python -c "import sageattention" &> /dev/null; then
-    pip install ninja wheel setuptools
-    MAX_JOBS=1 pip install git+https://github.com/thu-ml/SageAttention.git
-fi
-echo "=== 특수 부품 설치 완료! ==="
-
-echo "=== ComfyUI 기동 ==="
-cd /app/ComfyUI
-python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto || sleep infinity
-EOF
+# 6. 마법의 시작 스크립트를 도커 파일 안에서 직접 만들기! (에러 없는 printf 방식!)
+RUN printf '#!/bin/bash\n\
+echo "=== 런팟 볼륨 매핑 시작 ==="\n\
+mkdir -p /workspace/ComfyUI_Models\n\
+mkdir -p /workspace/ComfyUI_Output\n\
+rm -rf /app/ComfyUI/models\n\
+ln -s /workspace/ComfyUI_Models /app/ComfyUI/models\n\
+rm -rf /app/ComfyUI/output\n\
+ln -s /workspace/ComfyUI_Output /app/ComfyUI/output\n\
+jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --notebook-dir=/workspace --ServerApp.terminals_enabled=True --ServerApp.allow_origin="*" --ServerApp.disable_check_xsrf=True --ServerApp.trust_xheaders=True --ServerApp.allow_remote_access=True --ServerApp.token="" --ServerApp.password="" &\n\
+echo "=== 특수 부품(SageAttention) 조립 중... (시간이 조금 걸릴 수 있음) ==="\n\
+if ! python -c "import sageattention" &> /dev/null; then\n\
+    pip install ninja wheel setuptools\n\
+    MAX_JOBS=1 pip install git+https://github.com/thu-ml/SageAttention.git\n\
+fi\n\
+echo "=== ComfyUI 기동 ==="\n\
+cd /app/ComfyUI\n\
+python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto || sleep infinity\n' > /start.sh
 
 # 스크립트에 실행 권한 주기
 RUN chmod +x /start.sh
