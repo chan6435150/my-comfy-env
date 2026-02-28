@@ -6,12 +6,16 @@ RUN apt-get update && apt-get install -y \
     git wget libgl1-mesa-glx libglib2.0-0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. uv 및 파이썬 패키지 초고속 설치 (이건 도커 뱃속에 미리 구워둠!)
+# 3. uv 및 파이썬 패키지 초고속 설치 (전용 마트와 일반 마트 분리!)
 RUN pip install --no-cache-dir --upgrade pip uv
+
+# [전용 마트] PyTorch 부품들만 특별한 곳에서 사오기
 RUN uv pip install --system --no-cache-dir \
-    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 \
-    triton \
-    GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
+    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# [일반 마트] 나머지 모든 부품들은 일반 마트에서 사오기
+RUN uv pip install --system --no-cache-dir \
+    triton GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyterlab color-matcher sympy mpmath
