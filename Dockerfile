@@ -28,8 +28,9 @@ RUN uv pip install --system --no-cache-dir \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyterlab color-matcher sympy mpmath
 
-# 6. 특수 패키지 설치 (의존성 꼬임 방지를 위해 --no-build-isolation 적용)
-RUN uv pip install --system --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
+# 6. 특수 패키지 설치 (까다로운 녀석이라 꼼꼼하고 안전한 정석 방법으로 설치!)
+RUN pip install ninja wheel && \
+    pip install --no-build-isolation git+https://github.com/thu-ml/SageAttention.git
 
 # 7. 시작 스크립트 복사
 COPY start.sh /start.sh
