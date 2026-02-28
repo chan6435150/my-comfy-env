@@ -21,7 +21,8 @@ RUN uv pip install --system --no-cache-dir \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyter-server-terminals terminado ollama gdown color-matcher \
-    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub
+    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub \
+    requests aiohttp tqdm pillow google-api-python-client
 
 # 6. 시작 스크립트 작성 (줄 끝의 역슬래시 \ 를 아주 조심해야 하네!)
 RUN printf '#!/bin/bash\n\
