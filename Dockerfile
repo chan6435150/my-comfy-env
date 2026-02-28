@@ -15,14 +15,13 @@ RUN pip install --no-cache-dir --upgrade pip ninja wheel setuptools uv
 RUN uv pip install --system --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 RUN uv pip install --system --no-cache-dir triton
 
-# 5. [전수 조사 완료] 범용 AI 및 Fill-Nodes 필수 패키지 통합 설치
+# 5. [전수 조사 완료] 기초 체력(wcwidth, ftfy)과 AI 핵심 패키지 통합 설치
 RUN uv pip install --system --no-cache-dir \
     GitPython opencv-python-headless dill runwayml piexif dynamicprompts \
     numba deepdiff gguf fal-client toml py-cpuinfo onnxruntime-gpu \
     ultralytics segment-anything google-genai nvidia-ml-py natsort reportlab \
     jupyter-server-terminals terminado ollama gdown color-matcher \
-    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub \
-    requests aiohttp tqdm pillow google-api-python-client
+    open-clip-torch scipy wcwidth ftfy transformers huggingface_hub
 
 # 6. 시작 스크립트 작성 (줄 끝의 역슬래시 \ 를 아주 조심해야 하네!)
 RUN printf '#!/bin/bash\n\
