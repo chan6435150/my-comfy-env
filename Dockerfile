@@ -1,9 +1,10 @@
 # 1. 5090(sm_120)을 지원하는 최신 베이스 이미지
 FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
-# 2. 필수 시스템 도구 및 파이썬 설치 (빈 방에 가구 들이기)
+# 2. 필수 시스템 도구 및 파이썬 설치 (가상환경 도구 python3-venv 추가!)
 RUN apt-get update && apt-get install -y \
-    python3-pip python3-dev git wget libgl1-mesa-glx libglib2.0-0 ffmpeg build-essential libopengl0 \
+    python3-pip python3-dev python3-venv git wget \
+    libgl1-mesa-glx libglib2.0-0 ffmpeg build-essential libopengl0 \
     && rm -rf /var/lib/apt/lists/*
 
 # 파이썬 명령어를 'python'으로 연결해주네
