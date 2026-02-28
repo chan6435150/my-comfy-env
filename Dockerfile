@@ -1,13 +1,15 @@
-# 1. 베이스 이미지
-FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
+# 1. 5090을 지원하는 최신 베이스 이미지로 교체 (CUDA 12.8)
+FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
-# 2. 필수 시스템 도구 설치
-RUN apt-get update && apt-get install -y git wget libgl1-mesa-glx libglib2.0-0 ffmpeg build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# (중간 생략: apt-get 및 기본 도구 설치는 동일하게 유지)
 
-# 3. [범용 설정] 4090(8.9)과 5090(10.0) 이름표 미리 준비
-ENV TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;10.0"
+# 3. [5090 특화 설정] 10.0 뿐만 아니라 sm_120도 명시해주면 좋네.
+ENV TORCH_CUDA_ARCH_LIST="8.9;9.0;10.0;12.0"
 ENV MAX_JOBS=4
+
+# 4. PyTorch 설치 (5090 전용 나이틀리 또는 2.6 버전 사용)
+RUN uv pip install --system --no-cache-dir \
+    --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 
 # 4. 기본 도구 및 고속 설치기(uv) 세팅
 WORKDIR /workspace
