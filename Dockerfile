@@ -76,6 +76,11 @@ done
 
 find . -maxdepth 2 -name "requirements.txt" -exec pip install --no-cache-dir -r {} \;
 
+# 🚨 [새로 추가된 핵심 핫픽스 구간] 🚨
+# 노드들이 최신 버전을 깔아버려도, 마지막에 안정화 버전으로 강제 덮어쓰기!
+echo "🔧 강제 버전 고정 진행 중 (sageattention==1.0.6)"
+pip install --no-cache-dir sageattention==1.0.6
+
 cd /workspace/ComfyUI
 # 🎨 포트 8188 유지
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto
