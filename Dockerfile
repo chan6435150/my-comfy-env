@@ -83,6 +83,10 @@ done
 # 🚀 부팅 속도 최적화: 가상환경이 처음이거나 완료 마커가 없을 때만 설치
 if [ "$VENV_NEW" -eq 1 ] || [ ! -f "/workspace/my_env_312/.custom_nodes_installed" ]; then
     echo "📦 커스텀 노드 의존성을 설치합니다... (최초 1회 실행)"
+    
+    # 🚨 [함정 회피!] 커스텀 노드 requirements.txt 안에 숨어있는 sageattention 강제 설치 구문 싹 삭제!
+    find . -maxdepth 2 -name "requirements.txt" -exec sed -i '/sageattention/d' {} \;
+    
     find . -maxdepth 2 -name "requirements.txt" -exec pip install --no-cache-dir -r {} \;
     touch /workspace/my_env_312/.custom_nodes_installed
 else
