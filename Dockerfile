@@ -43,13 +43,13 @@ pip install --no-cache-dir --upgrade jupyter-server-terminals terminado
 nohup jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token="" --NotebookApp.password="" > /workspace/jupyterlab.log 2>&1 &
 echo "✅ 주피터랩이 8888 포트에서 실행 중입니다."
 
-# 💎 5090 엔진 무결성 검사 및 설치
-if python -c "import torch; import torchaudio; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then
-    echo "✅ 5090 엔진이 건강합니다."
+# 💎 5090 엔진 무결성 검사 및 설치 (PyTorch 2.7.1 + CUDA 12.8)
+if python -c "import torch; exit(0 if torch.__version__ == '2.7.1+cu128' else 1)" 2>/dev/null; then
+    echo "✅ PyTorch 2.7.1 엔진이 건강합니다."
 else
     echo "⚠️ 엔진 설치를 시작합니다..." 
     python -m ensurepip --upgrade
-    pip install --no-cache-dir --pre --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
+    pip install --no-cache-dir torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu128 --force-reinstall
     pip install --no-cache-dir sqlalchemy aiohttp pillow ollama gdown open-clip-torch ftfy wcwidth==0.2.13
 fi
 
@@ -89,10 +89,12 @@ else
     echo "✅ 커스텀 노드 의존성 설치가 완료된 상태입니다. (스킵)"
 fi
 
-# 🚨 RTX 5090 완벽 지원 (SageAttention 에러 방지 및 최신화)
-echo "🔧 Triton 및 SageAttention 최신 버전 세팅 중..."
-pip install --no-cache-dir -U triton
-pip install --no-cache-dir sageattention==2.2.0 --no-build-isolation
+# 🚨 RTX 5090 완벽 지원 (xformers 배제, Triton 3.3.1 & SageAttention 최신 깃허브 빌드)
+echo "🔧 Triton 3.3.1 및 컴파일 가속 도구 세팅 중..."
+pip install --no-cache-dir triton==3.3.1 ninja
+
+echo "🔧 SageAttention 최신 버전 소스 빌드 중 (PyPI 내려감 이슈 대응)..."
+pip install --no-cache-dir git+https://github.com/thu-ml/SageAttention.git
 
 cd /workspace/ComfyUI
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto
