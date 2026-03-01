@@ -24,9 +24,13 @@ echo "=== 🚀 RTX 5090 네트워크 볼륨 모드 가동 (Python 3.12 적용) =
 mkdir -p /workspace/tmp
 export TMPDIR=/workspace/tmp
 
+# 💡 가상환경 생성 및 신규 생성 여부 플래그 세팅
 if [ ! -d "/workspace/my_env_312" ]; then
     echo "새로운 Python 3.12 가상환경을 생성합니다..."
     python3.12 -m venv /workspace/my_env_312 --system-site-packages
+    VENV_NEW=1
+else
+    VENV_NEW=0
 fi
 source /workspace/my_env_312/bin/activate
 
@@ -58,9 +62,10 @@ cd /workspace/ComfyUI
 git reset --hard HEAD
 git pull
 
-# 순정 코어 의존성 및 커스텀 노드 설치
+# 순정 코어 의존성 설치
 pip install --no-cache-dir -r requirements.txt
 
+# 커스텀 노드 클론
 mkdir -p custom_nodes && cd custom_nodes
 nodes=(
     "https://github.com/ltdrdata/ComfyUI-Manager"
@@ -75,11 +80,19 @@ for node in "${nodes[@]}"; do
     if [ ! -d "$dir_name" ]; then git clone "$node"; fi
 done
 
-find . -maxdepth 2 -name "requirements.txt" -exec pip install --no-cache-dir -r {} \;
+# 🚀 부팅 속도 최적화: 가상환경이 처음이거나 완료 마커가 없을 때만 설치
+if [ "$VENV_NEW" -eq 1 ] || [ ! -f "/workspace/my_env_312/.custom_nodes_installed" ]; then
+    echo "📦 커스텀 노드 의존성을 설치합니다... (최초 1회 실행)"
+    find . -maxdepth 2 -name "requirements.txt" -exec pip install --no-cache-dir -r {} \;
+    touch /workspace/my_env_312/.custom_nodes_installed
+else
+    echo "✅ 커스텀 노드 의존성 설치가 완료된 상태입니다. (스킵)"
+fi
 
-# 🚨 강제 버전 고정 (SageAttention 에러 방지)
-echo "🔧 강제 버전 고정 진행 중 (sageattention==1.0.6)"
-pip install --no-cache-dir sageattention==1.0.6
+# 🚨 RTX 5090 완벽 지원 (SageAttention 에러 방지 및 최신화)
+echo "🔧 Triton 및 SageAttention 최신 버전 세팅 중..."
+pip install --no-cache-dir -U triton
+pip install --no-cache-dir sageattention==2.2.0 --no-build-isolation
 
 cd /workspace/ComfyUI
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto
