@@ -2,7 +2,7 @@
 # 1. 베이스 이미지: 5090(sm_120) 지원 CUDA 12.8
 FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
-# 2. 환경 변수: 드라이버 인식 및 경로 고정
+# 2. 환경 변수 세팅
 ENV PATH=/usr/local/cuda/bin:/usr/local/nvidia/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:$LD_LIBRARY_PATH
 ENV NVIDIA_VISIBLE_DEVICES=all
@@ -17,29 +17,31 @@ RUN apt-get update && apt-get install -y software-properties-common && \
     git wget ffmpeg libgl1-mesa-glx libglib2.0-0 build-essential libopengl0 aria2 \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. 시작 스크립트 작성 (최신 문법 적용 - 복붙 에러 완벽 차단)
+# 4. 시작 스크립트 작성
 COPY <<"EOF" /start.sh
 #!/bin/bash
 echo "=== 🚀 RTX 5090 네트워크 볼륨 모드 가동 (Python 3.12 적용) ==="
 mkdir -p /workspace/tmp
 export TMPDIR=/workspace/tmp
 
-# 💡 꼬여있는 예전 폴더를 피하기 위해 my_env_312 라는 새 이름으로 가상환경 생성
 if [ ! -d "/workspace/my_env_312" ]; then
     echo "새로운 Python 3.12 가상환경을 생성합니다..."
     python3.12 -m venv /workspace/my_env_312 --system-site-packages
 fi
 source /workspace/my_env_312/bin/activate
 
-# 🪐 주피터랩 실행 (포트 8888 유지)
-echo "🪐 주피터랩을 준비합니다..."
+# 🪐 주피터랩 설치 및 터미널 에러 수정 (핫픽스 적용)
+echo "🪐 주피터랩 및 터미널 환경을 준비합니다..."
 pip install --no-cache-dir jupyterlab
+# 🚨 주피터 터미널 'Launcher Error' 방지를 위한 강제 업데이트
+pip install --no-cache-dir --upgrade jupyter-server-terminals terminado
+
 nohup jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token="" --NotebookApp.password="" > /workspace/jupyterlab.log 2>&1 &
-echo "✅ 주피터랩이 8888 포트에서 백그라운드 실행 중입니다."
+echo "✅ 주피터랩이 8888 포트에서 실행 중입니다."
 
 # 💎 5090 엔진 무결성 검사 및 설치
 if python -c "import torch; import torchaudio; exit(0 if torch.cuda.is_available() else 1)" 2>/dev/null; then
-    echo "✅ 5090 엔진(Python 3.12)이 건강하게 살아있네! 바로 기동하겠네."
+    echo "✅ 5090 엔진이 건강합니다."
 else
     echo "⚠️ 엔진 설치를 시작합니다..." 
     python -m ensurepip --upgrade
@@ -47,7 +49,7 @@ else
     pip install --no-cache-dir sqlalchemy aiohttp pillow ollama gdown open-clip-torch ftfy wcwidth==0.2.13
 fi
 
-# 🩺 ComfyUI 본체 자동 치료 (좀비 에러 방지)
+# 🩺 ComfyUI 본체 자동 치료
 cd /workspace
 if [ ! -d "ComfyUI" ]; then
     git clone https://github.com/comfyanonymous/ComfyUI.git
@@ -56,10 +58,9 @@ cd /workspace/ComfyUI
 git reset --hard HEAD
 git pull
 
-# 순정 코어 의존성 꽉꽉 채워넣기
+# 순정 코어 의존성 및 커스텀 노드 설치
 pip install --no-cache-dir -r requirements.txt
 
-# 커스텀 노드 관리
 mkdir -p custom_nodes && cd custom_nodes
 nodes=(
     "https://github.com/ltdrdata/ComfyUI-Manager"
@@ -76,17 +77,14 @@ done
 
 find . -maxdepth 2 -name "requirements.txt" -exec pip install --no-cache-dir -r {} \;
 
-# 🚨 [새로 추가된 핵심 핫픽스 구간] 🚨
-# 노드들이 최신 버전을 깔아버려도, 마지막에 안정화 버전으로 강제 덮어쓰기!
+# 🚨 강제 버전 고정 (SageAttention 에러 방지)
 echo "🔧 강제 버전 고정 진행 중 (sageattention==1.0.6)"
 pip install --no-cache-dir sageattention==1.0.6
 
 cd /workspace/ComfyUI
-# 🎨 포트 8188 유지
 python main.py --listen 0.0.0.0 --port 8188 --highvram --preview-method auto
 EOF
 
-# 5. 스크립트에 실행 권한 부여 및 컨테이너 시작 시 실행
 RUN chmod +x /start.sh
 WORKDIR /workspace
 CMD ["/bin/bash", "/start.sh"]
