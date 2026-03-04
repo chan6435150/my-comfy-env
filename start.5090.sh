@@ -261,14 +261,25 @@ fi
 cd $COMFYUI_DIR
 
 # ============================================================================
-# [추가] comfy-mobile-ui-api-extension 자동 설치
+# [추가] comfy-mobile-ui-api-extension 자동 설치 (Release 완성본)
 # ============================================================================
-if [ ! -d "$COMFYUI_DIR/custom_nodes/comfy-mobile-ui-api-extension" ]; then
-    echo "Installing comfy-mobile-ui-api-extension..."
+if [ ! -d "$COMFYUI_DIR/custom_nodes/comfy-mobile-ui-api-extension/web" ]; then
+    echo "Installing comfy-mobile-ui-api-extension (Release version)..."
+    
+    # unzip 프로그램이 없을 경우를 대비해 설치
+    apt-get update && apt-get install -y unzip
+    
     cd "$COMFYUI_DIR/custom_nodes"
-    git clone https://github.com/jaeone94/comfy-mobile-ui.git temp_mobile_ui
-    cp -r temp_mobile_ui/comfy-mobile-ui-api-extension ./
-    rm -rf temp_mobile_ui
+    
+    # 기존에 잘못 받아진 뼈대 폴더가 있다면 삭제
+    rm -rf comfy-mobile-ui-api-extension
+    
+    # 깃허브에서 최신 릴리즈 zip 파일 주소를 찾아 다운로드 및 압축 풀기
+    URL=$(curl -s https://api.github.com/repos/jaeone94/comfy-mobile-ui/releases/latest | grep "browser_download_url" | grep ".zip" | head -n 1 | cut -d '"' -f 4)
+    wget -O mobile-ui.zip "$URL"
+    unzip mobile-ui.zip
+    rm mobile-ui.zip
+    
     cd $COMFYUI_DIR
 fi
 # ============================================================================
