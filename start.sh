@@ -259,7 +259,23 @@ fi
 
 # Start ComfyUI with custom arguments if provided
 cd $COMFYUI_DIR
-FIXED_ARGS="--listen 0.0.0.0 --port 8188"
+
+# ============================================================================
+# [추가] comfy-mobile-ui-api-extension 자동 설치
+# ============================================================================
+if [ ! -d "$COMFYUI_DIR/custom_nodes/comfy-mobile-ui-api-extension" ]; then
+    echo "Installing comfy-mobile-ui-api-extension..."
+    cd "$COMFYUI_DIR/custom_nodes"
+    git clone https://github.com/jaeone94/comfy-mobile-ui.git temp_mobile_ui
+    cp -r temp_mobile_ui/comfy-mobile-ui-api-extension ./
+    rm -rf temp_mobile_ui
+    cd $COMFYUI_DIR
+fi
+# ============================================================================
+
+# 기존 FIXED_ARGS에 --enable-cors-header 를 추가했습니다.
+FIXED_ARGS="--listen 0.0.0.0 --port 8188 --enable-cors-header"
+
 if [ -s "$ARGS_FILE" ]; then
     # File exists and is not empty, combine fixed args with custom args
     CUSTOM_ARGS=$(grep -v '^#' "$ARGS_FILE" | tr '\n' ' ')
