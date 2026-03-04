@@ -26,4 +26,4 @@ jobs:
           file: ./Dockerfile.5090
           push: true
           # 도커 허브의 vartyso/my-comfy-env1 저장소에 5090이라는 태그로 저장합니다.
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-comfy-env1:5090
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-comfy-env1:v2
